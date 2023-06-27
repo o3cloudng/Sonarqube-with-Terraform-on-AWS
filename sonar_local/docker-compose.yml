@@ -1,0 +1,57 @@
+#
+# Docker compose for sonarquebe with volumes mapped from host (you are telling docker which path to mount) and plus restart always to achieve autostart if docker containers fail or stop.
+# From https://github.com/SonarSource/docker-sonarqube/blob/master/recipes.md
+# /Users/peterszatmary/sonar/ is local path
+# Run with 
+#   - docker-compose up -d 
+#   - sudo docker-compose up -d 
+# Peter Szatmary 
+#
+version: "3"
+
+services:
+  sonarqube:
+    image: sonarqube
+    ports:
+      - "9000:9000"
+    restart: always
+    networks:
+      - sonarnet
+    environment:
+      - SONARQUBE_JDBC_URL=jdbc:postgresql://db:5432/sonar
+    volumes:
+      - sonarqube_conf:/opt/sonarqube/conf
+      - /Users/peterszatmary/sonar/sonarqube_conf:/opt/sonarqube/conf
+      - sonarqube_data:/opt/sonarqube/data
+      - /Users/peterszatmary/sonar/sonarqube_data:/opt/sonarqube/data
+      - sonarqube_extensions:/opt/sonarqube/extensions
+      - /Users/peterszatmary/sonar/sonarqube_extensions:/opt/sonarqube/extensions
+      - sonarqube_bundled-plugins:/opt/sonarqube/lib/bundled-plugins
+      - /Users/peterszatmary/sonar/sonarqube_bundled-plugins:/opt/sonarqube/lib/bundled-plugins
+
+  db:
+    image: postgres
+    restart: always
+    networks:
+      - sonarnet
+    environment:
+      - POSTGRES_USER=sonar
+      - POSTGRES_PASSWORD=sonar
+    volumes:
+      - postgresql:/var/lib/postgresql
+      - /Users/peterszatmary/sonar/postgresql:/var/lib/postgresql
+      # This needs explicit mapping due to https://github.com/docker-library/postgres/blob/4e48e3228a30763913ece952c611e5e9b95c8759/Dockerfile.template#L52
+      - postgresql_data:/var/lib/postgresql/data
+      - /Users/peterszatmary/sonar/postgresql_data:/var/lib/postgresql/data
+
+networks:
+  sonarnet:
+    driver: bridge
+
+volumes:
+  sonarqube_conf:
+  sonarqube_data:
+  sonarqube_extensions:
+  sonarqube_bundled-plugins:
+  postgresql:
+  postgresql_data:
